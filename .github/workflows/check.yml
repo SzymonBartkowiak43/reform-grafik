@@ -1,0 +1,42 @@
+name: Sprawdź grafik
+
+on:
+  schedule:
+    - cron: "*/20 * * * *"   # co 20 minut (GitHub potrafi opóźnić o kilka minut)
+  workflow_dispatch:          # ręczne uruchomienie z zakładki Actions
+
+permissions:
+  contents: write             # żeby zapisać state.json z powrotem do repo
+
+concurrency:
+  group: schedule-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Sprawdź nowe zajęcia
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: node check.js
+
+      - name: Zapisz stan
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state.json
+          if git diff --cached --quiet; then
+            echo "Bez zmian."
+          else
+            git commit -m "Aktualizacja stanu grafiku"
+            git push
+          fi
