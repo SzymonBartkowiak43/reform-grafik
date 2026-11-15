@@ -42,7 +42,14 @@
   },
   "pending": [],
   "heartbeat": "2026-11-15T15:10:11.326Z",
-  "watches": {},
-  "tgOffset": 546055115,
+  "watches": {
+    "f53d94a56a52d166f8845aae6058bdd90161e0935e05ea8906b05fcb3eee26e7": {
+      "startsAt": "2026-11-18T16:30:00+01:00",
+      "name": "KIDS Aerial Hammock Choreography",
+      "trainer": "Gabrysia",
+      "lastFree": 0
+    }
+  },
+  "tgOffset": 546055134,
   "commandsVersion": 2
 }
