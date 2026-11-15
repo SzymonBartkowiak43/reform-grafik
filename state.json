@@ -41,5 +41,8 @@
     "d475bac9488b8c78fdd2eaad98041f3c84f2361f0d4c441fa2ff49576090ae68": "2026-11-20T19:45:00+01:00"
   },
   "pending": [],
-  "heartbeat": "2026-11-15T15:10:11.326Z"
+  "heartbeat": "2026-11-15T15:10:11.326Z",
+  "watches": {},
+  "tgOffset": 546055114,
+  "commandsVersion": 1
 }
