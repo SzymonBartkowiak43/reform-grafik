@@ -1,3 +1,6 @@
 test-state.json
 node_modules/
 .t/
+.wrangler/
+.dev.vars
+node_modules/

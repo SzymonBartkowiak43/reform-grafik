@@ -1,0 +1,17 @@
+name = "reform-grafik"
+main = "src/worker.js"
+compatibility_date = "2025-06-01"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[vars]
+TELEGRAM_CHAT_ID = "-5157551933"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "reform-grafik"
+database_id = "bafd1900-1144-44f3-aeb6-df839bffb97c"
+
+[observability]
+enabled = true
