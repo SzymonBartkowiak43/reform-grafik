@@ -2,7 +2,7 @@
 
 Bot na Telegramie (@FitnesiaraBot) działający na Cloudflare Workers, w darmowym planie.
 
-- **Nowe zajęcia:** co 5 minut bot pobiera grafik z Fitssey (system za
+- **Nowe zajęcia:** co minutę bot pobiera grafik z Fitssey (system za
   https://reformbodystudio.pl/grafik/) na 90 dni do przodu. Gdy pojawią się nowe zajęcia,
   pisze do grupy. Między 23:00 a 7:00 jest cisza nocna, a nocne nowości przychodzą zbiorczo o 7:00.
 - **Zwolnione miejsca:** obserwujesz pełne zajęcia, a bot da znać, gdy zwolni się miejsce.
@@ -20,7 +20,7 @@ Bot na Telegramie (@FitnesiaraBot) działający na Cloudflare Workers, w darmowy
 Bot odpowiada od razu (webhook Telegrama) i reaguje tylko na czat z `TELEGRAM_CHAT_ID`.
 
 ## Jak to jest zbudowane
-- `src/worker.js`: cały bot. `scheduled()` to cron co 5 minut, `fetch()` obsługuje webhook Telegrama.
+- `src/worker.js`: cały bot. `scheduled()` to cron co minutę, `fetch()` obsługuje webhook Telegrama.
 - `schema.sql`: tabele w bazie D1 (`seen`, `pending`, `watches`, `meta`).
 - `wrangler.toml`: konfiguracja (cron, ID czatu, baza D1).
 - Sekrety w Cloudflare: `TELEGRAM_BOT_TOKEN` i `WEBHOOK_SECRET`.

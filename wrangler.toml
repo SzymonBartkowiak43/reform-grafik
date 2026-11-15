@@ -3,7 +3,7 @@ main = "src/worker.js"
 compatibility_date = "2025-06-01"
 
 [triggers]
-crons = ["*/5 * * * *"]
+crons = ["* * * * *"]
 
 [vars]
 TELEGRAM_CHAT_ID = "-5157551933"
