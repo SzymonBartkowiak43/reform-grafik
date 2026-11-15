@@ -89,10 +89,10 @@ const timeOf = (iso) => new Date(iso).toLocaleTimeString("pl-PL", { timeZone: TZ
 
 function formatEvent(e) {
   const spots = e.free >= 0 && e.total ? ` · wolne ${e.free}/${e.total}` : "";
-  const who = e.trainer ? ` (${e.trainer})` : "";
-  return `• ${fmtWhen(e.startsAt)} — ${e.name}${who}${spots}`;
+  const who = e.trainer ? ` · prowadzi ${e.trainer}` : "";
+  return `•${fmtWhen(e.startsAt)} — ${e.name}${who}${spots}`;
 }
-const buttonLabel = (e) => `${fmtWhen(e.startsAt)} ${e.name}`.slice(0, 60);
+const buttonLabel = (e) => `${fmtWhen(e.startsAt)} ${e.name}${e.trainer ? ` · ${e.trainer}` : ""}`.slice(0, 64);
 
 function warsawHour(d = new Date()) {
   return Number(new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "2-digit", hourCycle: "h23" }).format(d));
@@ -162,7 +162,7 @@ const HELP = [
 async function addWatch(e, store) {
   if (await store.watch(e.id)) return `Już obserwujesz: ${fmtWhen(e.startsAt)} — ${e.name}`;
   await store.addWatch(e);
-  const who = e.trainer ? ` (${e.trainer})` : "";
+  const who = e.trainer ? ` · prowadzi ${e.trainer}` : "";
   return e.free > 0
     ? `👀 Obserwuję: ${fmtWhen(e.startsAt)} — ${e.name}${who}. Uwaga: już teraz są wolne miejsca (${e.free})! ${BOOKING_URL}`
     : `👀 Obserwuję: ${fmtWhen(e.startsAt)} — ${e.name}${who}. Dam znać, gdy zwolni się miejsce.`;
@@ -214,7 +214,7 @@ async function handleCommand(text, env) {
     const list = (await store.watches()).filter((w) => new Date(w.starts_at).getTime() > now);
     if (!list.length) return tg.send("Nic nie obserwujesz. Użyj /obserwuj.");
     return tg.send(`Obserwowane zajęcia (${list.length}). Kliknij, żeby przestać obserwować:`, {
-      reply_markup: { inline_keyboard: list.map((w) => [{ text: `❌ ${buttonLabel({ startsAt: w.starts_at, name: w.name })}`, callback_data: `u:${shortId(w.id)}` }]) },
+      reply_markup: { inline_keyboard: list.map((w) => [{ text: `❌ ${buttonLabel({ startsAt: w.starts_at, name: w.name, trainer: w.trainer })}`, callback_data: `u:${shortId(w.id)}` }]) },
     });
   }
 
@@ -288,7 +288,7 @@ async function checkSchedule(env) {
     if (new Date(w.starts_at).getTime() <= now) { await store.removeWatch(w.id); continue; }
     const e = byId.get(w.id);
     if (!e) {
-      await tg.send(`⚠️ Obserwowane zajęcia zniknęły z grafiku (odwołane?): ${fmtWhen(w.starts_at)} — ${w.name}`);
+      await tg.send(`⚠️ Obserwowane zajęcia zniknęły z grafiku (odwołane?): ${fmtWhen(w.starts_at)} — ${w.name}${w.trainer ? ` · prowadzi ${w.trainer}` : ""}`);
       await store.removeWatch(w.id);
       continue;
     }
