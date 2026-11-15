@@ -20,7 +20,7 @@ const WATCH_LIST_DAYS = 14;  // /obserwuj bez daty pokazuje pełne zajęcia z ty
 const MAX_BUTTONS = 60;
 const QUIET_FROM = 23; // cisza nocna od 23:00…
 const QUIET_TO = 7;    // …do 7:00
-const COMMANDS_VERSION = 1;
+const COMMANDS_VERSION = 2;
 const STATE_FILE = process.env.STATE_FILE || "state.json";
 const DRY_RUN = process.env.DRY_RUN === "1";
 const CHAT_ID = String(process.env.TELEGRAM_CHAT_ID || "");
@@ -165,6 +165,7 @@ const HELP = [
   "Komendy:",
   "/obserwuj — pełne zajęcia z najbliższych 2 tygodni do wyboru",
   "/obserwuj 20.11 (albo: pt, jutro) — pełne zajęcia z danego dnia",
+  "/obserwuj 18.11 16:30 — od razu obserwuj konkretne zajęcia",
   "/lista — obserwowane zajęcia (z opcją usunięcia)",
   "",
   "Gdy zwolni się miejsce na obserwowanych zajęciach, dostaniesz powiadomienie.",
@@ -177,7 +178,27 @@ async function handleCommand(text, events, state, now) {
 
   if (cmd === "/obserwuj" || cmd === "/watch") {
     const day = parseDay(args[0], new Date(now));
-    if (day === "invalid") return send(`Nie rozumiem daty „${args[0]}”. Przykłady: /obserwuj 20.11, /obserwuj pt, /obserwuj jutro`);
+    if (day === "invalid") return send(`Nie rozumiem daty „${args[0]}”. Przykłady: /obserwuj 20.11, /obserwuj pt, /obserwuj 18.11 16:30`);
+
+    // Wariant z godziną: /obserwuj 18.11 16:30 → od razu obserwuje te zajęcia.
+    if (day && args[1]) {
+      const time = parseTime(args[1]);
+      if (!time) return send(`Nie rozumiem godziny „${args[1]}”. Przykład: /obserwuj 18.11 16:30`);
+      const sameDay = events
+        .filter((e) => ymd(new Date(e.startsAt)) === day && new Date(e.startsAt).getTime() > now)
+        .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+      const hits = sameDay.filter((e) => timeOf(e.startsAt) === time);
+      if (hits.length === 1) return send(addWatch(hits[0], state));
+      if (hits.length > 1) {
+        return send(`O ${time} jest kilka zajęć — kliknij, które obserwować:`, {
+          reply_markup: { inline_keyboard: hits.map((e) => [{ text: buttonLabel(e), callback_data: `w:${shortId(e.id)}` }]) },
+        });
+      }
+      const dayLabel = day.slice(8, 10) + "." + day.slice(5, 7);
+      if (!sameDay.length) return send(`Brak (nadchodzących) zajęć ${dayLabel}.`);
+      return send(`Brak zajęć ${dayLabel} o ${time}. Tego dnia są:\n${sameDay.map(formatEvent).join("\n")}`);
+    }
+
     const limit = now + WATCH_LIST_DAYS * 864e5;
     const full = events
       .filter((e) => new Date(e.startsAt).getTime() > now && e.free <= 0 && !state.watches[e.id])
@@ -203,19 +224,30 @@ async function handleCommand(text, events, state, now) {
   if (cmd === "/start" || cmd === "/pomoc" || cmd === "/help") return send(HELP);
 }
 
+function addWatch(e, state) {
+  if (state.watches[e.id]) return `Już obserwujesz: ${fmtWhen(e.startsAt)} — ${e.name}`;
+  state.watches[e.id] = { startsAt: e.startsAt, name: e.name, trainer: e.trainer, lastFree: e.free };
+  const who = e.trainer ? ` (${e.trainer})` : "";
+  return e.free > 0
+    ? `👀 Obserwuję: ${fmtWhen(e.startsAt)} — ${e.name}${who}. Uwaga: już teraz są wolne miejsca (${e.free})! ${BOOKING_URL}`
+    : `👀 Obserwuję: ${fmtWhen(e.startsAt)} — ${e.name}${who}. Dam znać, gdy zwolni się miejsce.`;
+}
+
+// "16:30", "16.30", "1630", "16" → "16:30" / "16:00"; inaczej null.
+function parseTime(arg) {
+  const m = (arg || "").match(/^(\d{1,2})(?:[:.]?(\d{2}))?$/);
+  if (!m || Number(m[1]) > 23 || Number(m[2] || 0) > 59) return null;
+  return `${m[1].padStart(2, "0")}:${m[2] || "00"}`;
+}
+
+const timeOf = (iso) => new Date(iso).toLocaleTimeString("pl-PL", { timeZone: TZ, hour: "2-digit", minute: "2-digit" });
+
 async function handleCallback(cq, events, state) {
   const [action, sid] = (cq.data || "").split(":");
   let reply;
   if (action === "w") {
     const e = events.find((x) => shortId(x.id) === sid);
-    if (!e) reply = "Tych zajęć nie ma już w grafiku.";
-    else if (state.watches[e.id]) reply = `Już obserwujesz: ${fmtWhen(e.startsAt)} ${e.name}`;
-    else {
-      state.watches[e.id] = { startsAt: e.startsAt, name: e.name, trainer: e.trainer, lastFree: e.free };
-      reply = e.free > 0
-        ? `👀 Obserwuję: ${fmtWhen(e.startsAt)} — ${e.name}. Uwaga: już teraz są wolne miejsca (${e.free})! ${BOOKING_URL}`
-        : `👀 Obserwuję: ${fmtWhen(e.startsAt)} — ${e.name}${e.trainer ? ` (${e.trainer})` : ""}. Dam znać, gdy zwolni się miejsce.`;
-    }
+    reply = e ? addWatch(e, state) : "Tych zajęć nie ma już w grafiku.";
   } else if (action === "u") {
     const id = Object.keys(state.watches).find((x) => shortId(x) === sid);
     if (!id) reply = "Tych zajęć już nie obserwujesz.";
@@ -261,7 +293,7 @@ async function main() {
 
   if (state.commandsVersion !== COMMANDS_VERSION) {
     await tg("setMyCommands", { commands: [
-      { command: "obserwuj", description: "Obserwuj pełne zajęcia (np. /obserwuj pt)" },
+      { command: "obserwuj", description: "Obserwuj zajęcia, np. /obserwuj 18.11 16:30" },
       { command: "lista", description: "Obserwowane zajęcia" },
       { command: "pomoc", description: "Jak to działa" },
     ] }).catch((err) => console.error("setMyCommands:", err.message));

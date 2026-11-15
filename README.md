@@ -8,6 +8,8 @@ z nocy przychodzą zbiorczo o 7:00.
 ## Obserwowanie pełnych zajęć
 - `/obserwuj` pokazuje pełne zajęcia z najbliższych 2 tygodni jako przyciski.
 - `/obserwuj 20.11`, `/obserwuj pt` albo `/obserwuj jutro` pokazuje pełne zajęcia z danego dnia.
+- `/obserwuj 18.11 16:30` od razu obserwuje konkretne zajęcia, bez przycisków. Jeśli o tej
+  godzinie nic nie ma, bot pokaże wszystkie zajęcia z tego dnia.
 - Klikasz zajęcia, a gdy zwolni się na nich miejsce, przychodzi 🔔 powiadomienie.
   Te powiadomienia idą od razu, także w nocy, bo miejsca szybko znikają. W nocy są tylko wyciszone.
 - `/lista` pokazuje obserwowane zajęcia, a kliknięcie wyłącza obserwowanie.
