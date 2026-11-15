@@ -2,7 +2,7 @@ name: Sprawdź grafik
 
 on:
   schedule:
-    - cron: "*/20 * * * *"   # co 20 minut (GitHub potrafi opóźnić o kilka minut)
+    - cron: "*/5 * * * *"    # co 5 minut (GitHub potrafi opóźnić o kilka minut)
   workflow_dispatch:          # ręczne uruchomienie z zakładki Actions
 
 permissions:

@@ -1,9 +1,19 @@
 # Reform Body Studio: powiadomienia o nowych zajęciach
 
-Co 20 minut GitHub Actions pobiera grafik z Fitssey (system, na którym działa
+Co 5 minut GitHub Actions pobiera grafik z Fitssey (system, na którym działa
 https://reformbodystudio.pl/grafik/) na 90 dni do przodu. Jeśli pojawią się nowe zajęcia,
 dostajesz wiadomość na Telegramie. Między 23:00 a 7:00 jest cisza nocna: powiadomienia
 z nocy przychodzą zbiorczo o 7:00.
+
+## Obserwowanie pełnych zajęć
+- `/obserwuj` pokazuje pełne zajęcia z najbliższych 2 tygodni jako przyciski.
+- `/obserwuj 20.11`, `/obserwuj pt` albo `/obserwuj jutro` pokazuje pełne zajęcia z danego dnia.
+- Klikasz zajęcia, a gdy zwolni się na nich miejsce, przychodzi 🔔 powiadomienie.
+  Te powiadomienia idą od razu, także w nocy, bo miejsca szybko znikają. W nocy są tylko wyciszone.
+- `/lista` pokazuje obserwowane zajęcia, a kliknięcie wyłącza obserwowanie.
+
+Bot odczytuje komendy przy każdym uruchomieniu, czyli co ~5 minut, więc odpowiedzi przychodzą
+z kilkuminutowym opóźnieniem. Reaguje tylko na czat ustawiony w `TELEGRAM_CHAT_ID`.
 
 ## Konfiguracja (ok. 10 minut)
 
